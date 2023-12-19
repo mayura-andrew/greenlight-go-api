@@ -1,3 +1,3 @@
-module greenlight
+module greenlight.mayuraandrew.tech
 
-go 1.21
+go 1.21.5
