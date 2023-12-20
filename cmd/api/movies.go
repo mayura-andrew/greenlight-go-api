@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"greenlight.mayuraandrew.tech/internal/data"
 	"net/http"
+	"time"
 )
 
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
@@ -16,6 +18,21 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		http.NotFound(w, r)
 		return
 	}
+
+	// a new instance of the Movie struct
+
+	movie := data.Movie{
+		ID:        id,
+		CreatedAt: time.Now(),
+		Title:     "Casablanca",
+		Runtime:   102,
+		Genres:    []string{"drama", "romance", "war"},
+		Version:   1,
+	}
+	err = app.writeJSON(w, http.StatusOK, envelop{"movie": movie}, nil)
 	// otherwise, interpolate the movie ID in a placeholder response.
-	fmt.Fprintf(w, "show the details of movie %d\n", id)
+	if err != nil {
+		app.logger.Println(err)
+		app.serverErrorRespone(w, r, err)
+	}
 }
