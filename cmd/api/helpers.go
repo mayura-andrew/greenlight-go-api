@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // define an envelope type
@@ -55,5 +58,83 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	w.WriteHeader(status)
 	w.Write(js)
 
+	return nil
+}
+
+func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+	// use http.MaxBytesReader() to limit the size of the request body to 1 MB.
+	maxBytes := 1_048_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
+	// initialize the json.Decoder, and call the DisallowUnknownFields() method on it before decoding. this means that if the JSON from the client now includes any field which cannot be mapped to the target
+	// destination, the decoder will return an error instead of just ignoring the field.
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+
+	// decode the request body to the destination
+	err := dec.Decode(dst)
+
+	// Decode the request body into the target destination.
+	if err != nil {
+		// if there is n error during decoding, start the triage...
+		var syntaxError *json.SyntaxError
+		var unmarshalTypeError *json.UnmarshalTypeError
+		var invalidUnmarshalError *json.InvalidUnmarshalError
+
+		switch {
+		// use the errors.As() function to check whether the error has the tye
+		// *json.SyntaxError. if it does, then return a plain-english error message
+		// which includes the location of the problem.
+		case errors.As(err, &syntaxError):
+			return fmt.Errorf("body contains badly-formed JSON (at character %d)", syntaxError.Offset)
+
+		//In some circumstances Decode() may also return an io.ErrUnexpectedEOF error
+		// for syntax errors in the JSON.
+		case errors.Is(err, io.ErrUnexpectedEOF):
+			return errors.New("body contains badly-formed JSON")
+
+			// Likewise, catch any *json.UnmarshalTypeError errors. These occur when the
+		// JSON value is the wrong type for the target destination. if the error
+		// related to a specific field, then we include, that int our error message to make it
+		// easier for the client to debug.
+
+		case errors.As(err, &unmarshalTypeError):
+			if unmarshalTypeError.Field != "" {
+				return fmt.Errorf("body contains incorrect JSON type for field %q", unmarshalTypeError.Field)
+			}
+			return fmt.Errorf("body contains incorrect JSON type (at character %d)", unmarshalTypeError.Offset)
+
+			// an io.EOF error will be returned by decode() if the request body is empty. we
+			// check for this with errors.Is() and return a plain-english error message instead.
+		case errors.Is(err, io.EOF):
+			return errors.New("body not be empty")
+
+		// if the JSON contains field which cannot be mapped  to the target destination
+		// then Decode() will now return an error message in the format "json: unknown field "<name>".
+		case strings.HasPrefix(err.Error(), "json: unknown field "):
+			fieldName := strings.TrimPrefix(err.Error(), "jsonL unknown field ")
+			return fmt.Errorf("body contanins unknown key %s", fieldName)
+
+		// if the request body exceeds 1MB in size the decode will now fail with the
+		// error http: request body too large.
+		case err.Error() == "http: request body too large":
+			return fmt.Errorf("body must not be larger than %d bytes", maxBytes)
+
+		case errors.As(err, &invalidUnmarshalError):
+			panic(err)
+
+		// For anything else, return the error message as-is.
+		default:
+			return err
+		}
+
+	}
+	// call Decode() again using a pointer to an empty anonymous struct as the
+	// destination. If the request body only contained a signal JSON value this will
+	// return an io.EOF error. so if we get anything else, we know that there is
+	// additional data in the request body and we return our own custom error message.
+	err = dec.Decode(&struct{}{})
+	if err != io.EOF {
+		return errors.New("body must only contain a single JSON value")
+	}
 	return nil
 }
