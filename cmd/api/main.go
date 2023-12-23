@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	_ "github.com/lib/pq" // note that this _ blank identifier used for to stop the Go
+	"greenlight.mayuraandrew.tech/internal/data"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +33,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 // the main function code
@@ -75,6 +77,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	// declare an HTTP server with some sensible timeout settings, which listens on the port provided in the config struct
