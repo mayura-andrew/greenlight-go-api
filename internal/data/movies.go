@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"github.com/lib/pq"
@@ -51,10 +52,13 @@ func (m MovieModel) Insert(movie *Movie) error {
 
 	args := []interface{}{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
 
-	// use the QuertRow() method to execute the SQL query on our connection pool,
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	// passing in the args slice as a variadic parameter and scanning the system-
 	// generated id, created_at, and version values into the movie struct.
-	return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
 func (m MovieModel) Get(id int64) (*Movie, error) {
@@ -70,7 +74,16 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 	// declare a Movie struct to hold the data returned by the query.
 	var movie Movie
 
-	err := m.DB.QueryRow(query, id).Scan(
+	// use the context.WithTimeout() function to create a context.Context which
+	// carries a 3-second timeout deadline.  note that we're using the empty context.Background()
+	// as the "parent" context.
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	// use defer to make sure that we cancel context before the Get()
+	// method returns.
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&movie.ID,
 		&movie.CreatedAt,
 		&movie.Title,
@@ -109,12 +122,14 @@ func (m MovieModel) Update(movie *Movie) error {
 		movie.Version,
 	}
 
-	// use the QueryRow() method to execute the query, passing in the args slice as a variadic parameter and
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	// scanning the new version value into the movie struct
 	// execute the SQL query. If no matching row could be found, we know the movie,
 	// version has changed (or the record has been deleted) and we return
 	// our custom ErrEditConflict error.
-	err := m.DB.QueryRow(query, args...).Scan(&movie.Version)
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.Version)
 
 	if err != nil {
 		switch {
@@ -139,7 +154,10 @@ func (m MovieModel) Delete(id int64) error {
 	// execute the SQL query using Exec() method, passing in the id variables as the value for the placeholder parameter. The Exec() method
 	// returns a sql.Result object.
 
-	result, err := m.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
