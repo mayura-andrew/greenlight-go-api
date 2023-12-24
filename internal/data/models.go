@@ -5,9 +5,10 @@ import (
 	"errors"
 )
 
-// define a custom ErrRecordNotFound error
+// define a custom errors
 var (
 	ErrRecordNotFound = errors.New("record not found")
+	ErrEditConflict   = errors.New("edit conflict")
 )
 
 //type Models struct {

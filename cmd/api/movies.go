@@ -6,6 +6,7 @@ import (
 	"greenlight.mayuraandrew.tech/internal/data"
 	"greenlight.mayuraandrew.tech/internal/validator"
 	"net/http"
+	"strconv"
 )
 
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
@@ -134,10 +135,10 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 	// declare an input struct to hold the expected data from the client.
 
 	var input struct {
-		Title   string       `json:"title"`
-		Year    int32        `json:"year"`
-		Runtime data.Runtime `json:"runtime"`
-		Genres  []string     `json:"genres"`
+		Title   *string       `json:"title"`
+		Year    *int32        `json:"year"`
+		Runtime *data.Runtime `json:"runtime"`
+		Genres  []string      `json:"genres"`
 	}
 
 	// read the JSON request body data into the input struct
@@ -147,11 +148,21 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// copy the values from the request body to the appropriate fields of the movie record.
-	movie.Title = input.Title
-	movie.Year = input.Year
-	movie.Runtime = input.Runtime
-	movie.Genres = input.Genres
+	if input.Title != nil {
+		movie.Title = *input.Title
+	}
+
+	if input.Year != nil {
+		movie.Year = *input.Year
+	}
+
+	if input.Runtime != nil {
+		movie.Runtime = *input.Runtime
+	}
+
+	if input.Genres != nil {
+		movie.Genres = input.Genres // don't need to dereference a  slice
+	}
 
 	// validate the updated movie record, sending the client a 422 Unprocessble Entity
 	// response if any checks fail.
@@ -165,9 +176,24 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 	// pass the updated movie record to our new Update() method
 	err = app.models.Movies.Update(movie)
 	if err != nil {
-		app.serverErrorRespone(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorRespone(w, r, err)
+		}
 		return
 	}
+
+	// if the request contains a X-Expected-Version header, verify that the movie,
+	// version in the database matches the expected version specified in the header.
+	if r.Header.Get("X-Expected-Version") != "" {
+		if strconv.FormatInt(int64(movie.Version), 32) != r.Header.Get("x-Expected-Version") {
+			app.editConflictResponse(w, r)
+			return
+		}
+	}
+
 	// write the updated movie record in a JSON response.
 	err = app.writeJSON(w, http.StatusOK, envelop{"movie": movie}, nil)
 	if err != nil {
