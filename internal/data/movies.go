@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/lib/pq"
 	"greenlight.mayuraandrew.tech/internal/validator"
 	"time"
@@ -183,11 +184,13 @@ func (m MovieModel) Delete(id int64) error {
 func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, error) {
 	// construct the SQL query to retrieve all movie reords.
 
-	query := `SELECT id, created_at, title, year, runtime, genres, version
+	// full-text search for the title filter
+	//
+	query := fmt.Sprintf(`SELECT id, created_at, title, year, runtime, genres, version
 	FROM movies 
-	WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+	WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 	AND (genres @> $2 OR $2 = '{}')
-	ORDER BY id`
+	ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
 
 	// create a context with a 3-second timeout.
 
