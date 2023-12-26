@@ -7,7 +7,7 @@ import (
 	"fmt"
 	_ "github.com/lib/pq" // note that this _ blank identifier used for to stop the Go
 	"greenlight.mayuraandrew.tech/internal/data"
-	"log"
+	"greenlight.mayuraandrew.tech/internal/jsonlog"
 	"net/http"
 	"os"
 	"time"
@@ -32,7 +32,7 @@ type config struct {
 // an application struct to hold the dependencies for HTTP handlers, helpers, and middleware.
 type application struct {
 	config config
-	logger *log.Logger
+	logger *jsonlog.Logger
 	models data.Models
 }
 
@@ -57,13 +57,13 @@ func main() {
 
 	// initialize a new logger which writes messages to the standard out stream,
 	// prefixed with the current date and time.
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	// call the openDB() helper function to create the connection pool.
 
 	db, err := openDB(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 
 	// Defer a call to db.Close() so that the connection pool is closed before the main() function exits.
@@ -71,7 +71,7 @@ func main() {
 	defer db.Close()
 
 	// message to say that the connection pool has been successfully established.
-	logger.Printf("database connection pool established.")
+	logger.PrintInfo("database connection pool established.", nil)
 
 	// declare an instance of the application struct, containing the config struct and the logger.
 	app := &application{
@@ -92,9 +92,12 @@ func main() {
 	}
 
 	// start the HTTP server
-	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
+	logger.PrintInfo("starting server on ", map[string]string{
+		"addr": srv.Addr,
+		"env":  cfg.env,
+	})
 	err = srv.ListenAndServe()
-	logger.Fatal(err)
+	logger.PrintFatal(err, nil)
 }
 
 // the openDB() function returns a sql.DB connection pool.

@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (app *application) routes() *httprouter.Router {
+func (app *application) routes() http.Handler {
 	// Initialize a new httprouter router instance
 
 	router := httprouter.New()
@@ -28,5 +28,5 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", app.deleteMovieHandler)
 
 	// Returns the httprouter instance
-	return router
+	return app.recoverPanic(router)
 }
