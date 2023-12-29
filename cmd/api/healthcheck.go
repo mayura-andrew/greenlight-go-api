@@ -20,6 +20,9 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 		},
 	}
 
+	// add a 4 second delay.
+	//	time.Sleep(4 * time.Second)
+
 	err := app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.logger.PrintError(err, nil)

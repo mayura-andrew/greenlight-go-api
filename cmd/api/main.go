@@ -4,11 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	_ "github.com/lib/pq" // note that this _ blank identifier used for to stop the Go
 	"greenlight.mayuraandrew.tech/internal/data"
 	"greenlight.mayuraandrew.tech/internal/jsonlog"
-	"net/http"
 	"os"
 	"time"
 	// compiler complaining that the package isn't being used.
@@ -95,23 +93,7 @@ func main() {
 		models: data.NewModels(db),
 	}
 
-	// declare an HTTP server with some sensible timeout settings, which listens on the port provided in the config struct
-
-	// Use the httprouter instance returned by app.routes() as the server handler.
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-	}
-
-	// start the HTTP server
-	logger.PrintInfo("starting server on ", map[string]string{
-		"addr": srv.Addr,
-		"env":  cfg.env,
-	})
-	err = srv.ListenAndServe()
+	err = app.serve()
 	logger.PrintFatal(err, nil)
 }
 
