@@ -205,3 +205,18 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 	// otherwise, return the converted integer value.
 	return i
 }
+
+// the background() helper accepts an arbitrary function as a parameter.
+
+func (app *application) background(fn func()) {
+	// launch a background goroutine.
+	go func() {
+		// recover any panic.
+		if err := recover(); err != nil {
+			app.logger.PrintError(fmt.Errorf("%s", err), nil)
+		}
+	}()
+
+	// execute the arbitrary function that we passed as the parameter.
+	fn()
+}

@@ -33,6 +33,7 @@ var (
 // this Models struct wraps the MovieModel
 type Models struct {
 	Movies MovieModel
+	Users  UserModel
 }
 
 // for each of use, we also add a new() method which return a Models struct containing
@@ -41,5 +42,6 @@ type Models struct {
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Movies: MovieModel{DB: db},
+		Users:  UserModel{DB: db},
 	}
 }
