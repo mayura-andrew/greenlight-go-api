@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="PostgreSQL" uuid="6cd6a3f0-52c7-41d3-9f3f-7d0318b571a7">
+    <data-source source="LOCAL" name="greenlight_rlwk@dpg-cm32dr21hbls73a34830-a.singapore-postgres.render.com" uuid="6cd6a3f0-52c7-41d3-9f3f-7d0318b571a7">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
-      <configured-by-url>true</configured-by-url>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>postgres://greenlight:IJqVf6sl4X65loN2s97728jxNVwktTiC@dpg-cm32dr21hbls73a34830-a.singapore-postgres.render.com/greenlight_rlwk</jdbc-url>
+      <jdbc-url>jdbc:postgresql://dpg-cm32dr21hbls73a34830-a.singapore-postgres.render.com:5432/greenlight_rlwk</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
