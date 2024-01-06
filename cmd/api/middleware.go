@@ -197,3 +197,89 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 	})
 }
+
+//func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		// Use the contextGetUser() helper that we made earlier to retrieve the user
+//		// information from the request context.
+//		user := app.contextGetUser(r)
+//
+//		// If the user is anonymous, then call the authenticationRequiredResponse() to
+//		// inform the client that they should authenticate before trying again.
+//
+//		if user.IsAnonymous() {
+//			app.authenticationRequiredResponse(w, r)
+//			return
+//		}
+//
+//		// If the user is not activated, use the inactiveAccountResponse() helper to
+//		// inform them that they need to activate their account.
+//		if !user.Activated {
+//			app.inactiveAccountResponse(w, r)
+//			return
+//		}
+//
+//		// call the next handler in the chain
+//		next.ServeHTTP(w, r)
+//	})
+//}
+
+func (app *application) requireAuthenticatedUser(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// checks that is a user is both authenticated and activated.
+func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+	// rather than returning this http.handlerFunc we assign it to the variable fn.
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		// check that a user is activated.
+		if !user.Activated {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+
+	})
+
+	//wrap fn with the requireAuthenticatedUser() middleware before returinig it.
+	return app.requireAuthenticatedUser(fn)
+
+}
+
+// Note that the first parameter for the middleware function is the permission code that
+// we require the user to have.
+func (app *application) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		// retrieve the user from the request context.
+		user := app.contextGetUser(r)
+
+		// get the slice of permissions for the user.
+		permissions, err := app.models.Permissions.GetAllForUser(user.ID)
+		if err != nil {
+			app.serverErrorRespone(w, r, err)
+			return
+		}
+
+		// check if the slice includes the required permission. if it doesn't, then
+		// return a 403 Forbidden response.
+		if !permissions.Include(code) {
+			app.notPermittedResponse(w, r)
+			return
+		}
+
+		// otherwise they have the required permission so we call the next handler in the chain.
+		next.ServeHTTP(w, r)
+	}
+	// wrap this this the requireActivateUser() middleware before returing it.
+	return app.requireActivatedUser(fn)
+}

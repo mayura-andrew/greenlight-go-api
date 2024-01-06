@@ -3,5 +3,7 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/internal/data/movies.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/migrations/000001_create_movies_table.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/000006_add_permisions.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/000006_add_permisions.up.sql" dialect="GenericSQL" />
   </component>
 </project>
