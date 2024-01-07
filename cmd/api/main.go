@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"database/sql"
+	"expvar"
 	"flag"
 	_ "github.com/lib/pq" // note that this _ blank identifier used for to stop the Go
 	"greenlight.mayuraandrew.tech/internal/data"
 	"greenlight.mayuraandrew.tech/internal/jsonlog"
 	"greenlight.mayuraandrew.tech/internal/mailer"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 	// compiler complaining that the package isn't being used.
@@ -57,6 +59,7 @@ type application struct {
 
 // the main function code
 func main() {
+
 	// declare an instance of the config struct
 	var cfg config
 
@@ -119,6 +122,25 @@ func main() {
 
 	// message to say that the connection pool has been successfully established.
 	logger.PrintInfo("database connection pool established.", nil)
+
+	// Publish a new "version" variable in the expvar handler containing our application
+	// version number (currently the constant "1.0.0").
+	expvar.NewString("version").Set(version)
+
+	// publish the number of active goroutines.
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
+
+	// publish the database connection pool statistics.
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+
+	// publish the current unix  timestamp.
+	expvar.Publish("timestamp", expvar.Func(func() any {
+		return time.Now().Unix()
+	}))
 
 	// declare an instance of the application struct, containing the config struct and the logger.
 	app := &application{
