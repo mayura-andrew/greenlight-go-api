@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"expvar"
 	"flag"
+	"fmt"
 	_ "github.com/lib/pq" // note that this _ blank identifier used for to stop the Go
 	"greenlight.mayuraandrew.tech/internal/data"
 	"greenlight.mayuraandrew.tech/internal/jsonlog"
@@ -68,7 +69,9 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	// read the DSN value from the db-dsn command-line flag into the config struct.
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
+	//flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
+
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 
 	// read the connection pool settings from command-line flags into the config struct.
 
@@ -103,8 +106,16 @@ func main() {
 		cfg.cors.trustedOrigins = strings.Fields(val)
 		return nil
 	})
+
+	displayVersion := flag.Bool("version", false, "Display version and exit")
 	flag.Parse()
 
+	// If the version flag value is true, then print out the version number and
+	// immediately exit.
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 	// initialize a new logger which writes messages to the standard out stream,
 	// prefixed with the current date and time.
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)

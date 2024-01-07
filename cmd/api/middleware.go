@@ -5,10 +5,10 @@ import (
 	"expvar"
 	"fmt"
 	"github.com/felixge/httpsnoop"
+	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 	"greenlight.mayuraandrew.tech/internal/data"
 	"greenlight.mayuraandrew.tech/internal/validator"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -81,11 +81,12 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// only carry out the check if rate limiting is enable.
 		if app.config.limiter.enabled {
-			ip, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err != nil {
-				app.serverErrorRespone(w, r, err)
-				return
-			}
+			//ip, _, err := net.SplitHostPort(r.RemoteAddr)
+			//if err != nil {
+			//	app.serverErrorRespone(w, r, err)
+			//	return
+			//}
+			ip := realip.FromRequest(r)
 
 			mu.Lock()
 

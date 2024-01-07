@@ -18,6 +18,7 @@ import (
 
 //go:embed templates/*
 var templateFS embed.FS
+
 // Define a Mailer struct which contains a mail.Dialer instance (used to connect to a
 // SMTP server) and the sender information for your emails (the name and address you
 // want the email to be from, such as "Alice Smith <alice@example.com>").
