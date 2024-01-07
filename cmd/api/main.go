@@ -10,6 +10,7 @@ import (
 	"greenlight.mayuraandrew.tech/internal/data"
 	"greenlight.mayuraandrew.tech/internal/jsonlog"
 	"greenlight.mayuraandrew.tech/internal/mailer"
+	"greenlight.mayuraandrew.tech/internal/vcs"
 	"os"
 	"runtime"
 	"strings"
@@ -17,8 +18,13 @@ import (
 	// compiler complaining that the package isn't being used.
 )
 
+// Make version a variable (rather than a constant) and set its value to vcs.Version().
+var (
+	version = vcs.Version()
+)
+
 // the application version number
-const version = "1.0.0"
+//const version = "1.0.0"
 
 // the configuration settings for application
 type config struct {
