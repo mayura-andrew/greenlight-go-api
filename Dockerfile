@@ -1,18 +1,26 @@
-# Dockerfile
-FROM ubuntu:20.04
+# Start from the latest golang base image
+FROM golang:latest
 
-# Install build essentials and the required GLIBC version
-RUN apt-get update && apt-get install -y build-essential
+# Add Maintainer Info
+LABEL maintainer="Your Name <your.email@example.com>"
 
-# Install a specific GLIBC version
-# Replace 'GLIBC_VERSION' with the version from your server
-RUN apt-get install -y libc6=2.31
-
-# Copy your source code
-COPY . /app
-
-# Set working directory
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Build the binary
-RUN make build/api
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
+RUN go mod download
+
+# Copy the source from the current directory to the Working Directory inside the container
+COPY . .
+
+# Build the Go app
+RUN go build -o main .
+
+# Expose port 8080 to the outside world
+EXPOSE 8080
+
+# Command to run the executable
+CMD ["./main"]

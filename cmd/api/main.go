@@ -75,9 +75,9 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	// read the DSN value from the db-dsn command-line flag into the config struct.
-	//flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
+	//flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 
 	// read the connection pool settings from command-line flags into the config struct.
 
@@ -96,10 +96,10 @@ func main() {
 	// make sure to replace the default values for smtp-username and smtp-password
 	// with your own Mailtrap credentials.
 
-	flag.StringVar(&cfg.smtp.host, "smtp-host", "smtp.mailtrap.io", "SMTP host")
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", "2bfbc85f6d0d52", "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", "a7aec852192bf8", "SMTP password")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "da3004e354e4e5", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "5d743a5e6e17d7", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "freeMoviesHub <no-reply@mayuraandrew.tech>", "SMTP sender")
 
 	// Use the flag.Func() function to process the -cors-trusted-origins command line
