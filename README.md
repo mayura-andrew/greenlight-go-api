@@ -3,7 +3,7 @@ Go Lang API project - Let's Go Further by Alex Edwards
 LIVE API URL := http://157.245.104.209
 
 # Project Overview
-[]
+![API OVERVIEW](https://raw.githubusercontent.com/mayura-andrew/greenlight-go-api/master/API_Overview.png)
 
 # API Endpoints
 
