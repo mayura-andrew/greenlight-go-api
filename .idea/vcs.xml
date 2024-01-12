@@ -2,5 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/greenlight@157.245.104.209/greenlight-go-api" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/greenlight@157.245.104.209/greenlight-go-api/greenlight@157.245.104.209/greenlight-go-api" vcs="Git" />
   </component>
 </project>

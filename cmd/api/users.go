@@ -1,12 +1,14 @@
 package main
 
 import (
+	
 	"errors"
 	"fmt"
-	"greenlight.mayuraandrew.tech/internal/data"
-	"greenlight.mayuraandrew.tech/internal/validator"
 	"net/http"
 	"time"
+
+	"greenlight.mayuraandrew.tech/internal/data"
+	"greenlight.mayuraandrew.tech/internal/validator"
 )
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -98,11 +100,22 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		for key, value := range data {
 			fmt.Printf("%s:%v\n", key, value)
 		}
+
+
+
 		// Send the welcome email
+		
+
 		err = app.mailer.Send(user.Email, "user_welcome.tmpl", data)
 		if err != nil {
 			app.logger.PrintError(err, nil)
 		}
+
+		// // Send the data as a JSON response
+		// err = json.NewEncoder(w).Encode(data)
+		// if err != nil {
+		// 	app.logger.PrintError(err, nil)
+		// }
 	})
 
 	// write a JSON response containing the user data along with a 201 Created status
@@ -110,7 +123,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	// Note that we also change this to send the client a 202 Accepted status code.
 	// This status code indicates that the request has been accepted for processing, but
 	// the processing has not been completed.
-	err = app.writeJSON(w, http.StatusAccepted, envelop{"user": user}, nil)
+	err = app.writeJSON(w, http.StatusAccepted, envelop{"user": user, "activationCode": token.Plaintext}, nil)
 	if err != nil {
 		app.serverErrorRespone(w, r, err)
 	}

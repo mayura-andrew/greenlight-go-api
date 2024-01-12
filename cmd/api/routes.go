@@ -36,6 +36,8 @@ func (app *application) routes() http.Handler {
 	// Register a new GET /debug/vars endpoint pointing to the expvar handler.
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
+
+	router.HandlerFunc(http.MethodGet, "/", app.rootHandler)
 	// Returns the httprouter instance
 	return app.metrics(app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router)))))
 }

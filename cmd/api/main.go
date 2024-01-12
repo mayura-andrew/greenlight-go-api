@@ -6,15 +6,19 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
+	"log"
+	"net/url"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
+
 	_ "github.com/lib/pq" // note that this _ blank identifier used for to stop the Go
 	"greenlight.mayuraandrew.tech/internal/data"
 	"greenlight.mayuraandrew.tech/internal/jsonlog"
 	"greenlight.mayuraandrew.tech/internal/mailer"
 	"greenlight.mayuraandrew.tech/internal/vcs"
-	"os"
-	"runtime"
-	"strings"
-	"time"
 	// compiler complaining that the package isn't being used.
 )
 
@@ -96,11 +100,31 @@ func main() {
 	// make sure to replace the default values for smtp-username and smtp-password
 	// with your own Mailtrap credentials.
 
-	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
-	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", "da3004e354e4e5", "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", "5d743a5e6e17d7", "SMTP password")
-	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "freeMoviesHub <no-reply@mayuraandrew.tech>", "SMTP sender")
+	envVarValue := os.Getenv("SMTPPORT")
+
+	if envVarValue == "" {
+		fmt.Println("Environment variable is not set.")
+		return
+	}
+
+	// Convert the environment variable value to an integer
+	intValue, err := strconv.Atoi(envVarValue)
+	if err != nil {
+		fmt.Println("Error converting environment variable to integer:", err)
+		return
+	}
+	fmt.Printf("%d", intValue)
+
+	smtpSender, err := url.QueryUnescape(os.Getenv("SMTPSENDER"))
+	if err != nil {
+		log.Fatalf("Failed to decore the SMTPSENDER: %v", err)
+	}
+	fmt.Printf("%s", smtpSender)
+	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTPHOST"), "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", intValue, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTPUSERNAME"), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTPPASS"), "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", smtpSender, "SMTP sender")
 
 	// Use the flag.Func() function to process the -cors-trusted-origins command line
 	// flag. In this we use the strings.Fields() function to split the flag value into a
